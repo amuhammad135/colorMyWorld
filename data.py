@@ -50,6 +50,8 @@ class DATA():
 			grey_img, color_img = self.read_img(filename)
 			batch.append(grey_img)
 			labels.append(color_img)
+
+			#should this be %self.batch_size or self.size
 			self.data_index = (self.data_index + 1) % self.size #make sure it doesnt go over; consider using if statement instead
 
 		#normalize values of images to be in range [0,1] of the sigmoid function
