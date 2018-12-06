@@ -110,3 +110,38 @@ class Model():
         out_global = global_level_feature_network(out_low)
         self.output = colorization_network(out_mid,out_global)
         self.loss = tf.reduce_mean(tf.squared_difference(self.labels, self.output))
+
+
+
+    def train(self, data, log):
+        optimizer = tf.train.AdamOptimizer(1e-4).minimize(self.loss)
+        saver = tf.train.Saver()
+        with tf.Session() as session:
+            session.run(tf.global_variables_initializer())
+            print('All variables Initialized')
+            if conf.USE_PRETRAINED:
+                saver.restore(session, os.path.join(conf.MODEL_DIR, conf.PRETRAINED))
+                print('Pretrained weights loaded')
+            for epoch in range(conf.NUM_EPOCHS):
+                avg_cost = 0
+                for batch in range(int(data.size/conf.BATCH_SIZE)):
+                    batchX, batchY, _ = data.get_batch()
+                    feed_dict = {self.inputs: batchX, self.labels: batchY}
+                    _, loss_val = session.run([optimizer, self.loss], feed_dict=feed_dict)
+                    print("batch:", batch, " loss: ", loss_val)
+                    avg_cost += loss_val / int(data.size/conf.BATCH_SIZE)
+                print("Epoch:", (epoch + 1), "cost =", "{:.5f}".format(avg_cost))
+                log.write("Epoch: " + str(epoch + 1) + " Average Cost: " + str(avg_cost) + "\n")
+
+            save_path = saver.save(session, os.path.join(conf.MODEL_DIR, "model" + str(conf.BATCH_SIZE) + "_" + str(conf.NUM_EPOCHS) + ".ckpt"))
+            print("Model saved in path: %s" % save_path)
+            log.write("Model saved in path: " + save_path + "\n")
+
+
+
+
+
+
+
+
+
