@@ -1,8 +1,9 @@
+import os
 import tensorflow as tf
 import nn
 import numpy as np
 import conf
-
+import cv2
 
 def low_level_feature_network(x):
     conv1 = nn.ConvolutionLayer(shape=[3, 3, 1, 64], std=.1, v=.1)
@@ -136,6 +137,22 @@ class Model():
             save_path = saver.save(session, os.path.join(conf.MODEL_DIR, "model" + str(conf.BATCH_SIZE) + "_" + str(conf.NUM_EPOCHS) + ".ckpt"))
             print("Model saved in path: %s" % save_path)
             log.write("Model saved in path: " + save_path + "\n")
+
+
+    def test(self, data, log):
+        saver = tf.train.Saver()
+        with tf.Session() as session:
+            saver.restore(session, os.path.join(conf.MODEL_DIR, "model" + str(conf.BATCH_SIZE) + "_" + str(conf.NUM_EPOCHS) + ".ckpt"))
+            avg_cost = 0
+            total_batch = int(data.size/conf.BATCH_SIZE)
+            for _ in range(total_batch):
+                batchX, batchY, filelist = data.get_batch()
+                feed_dict = {self.inputs: batchX, self.labels: batchY}
+                predY, loss = session.run([self.output, self.loss], feed_dict=feed_dict)
+                reconstruct(deprocess(batchX), deprocess(predY), filelist)
+                avg_cost += loss/total_batch
+            print("cost =", "{:.3f}".format(avg_cost))
+            log.write("Average Cost: " + str(avg_cost) + "\n")
 
 
 
