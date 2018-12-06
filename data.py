@@ -56,10 +56,11 @@ class DATA():
 
 		#normalize values of images to be in range [0,1] of the sigmoid function
 		batch = np.asarray(batch)/255
-		labels = np.asarray(labels)/255
+		labels = np.asarray(labels)/255 #color images: should name labels ? or groundtruth?
 
-
-		return batch, labels, filelist
+		inputData = batch
+		groundTruth = labels
+		return inputData, groundTruth, filelist
 
 
 
