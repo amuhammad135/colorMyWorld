@@ -25,15 +25,15 @@ class FCLayer(Layer):
 
 class FusionLayer(Layer):
     def __init__(self, shape, std, v):
-        super(Fusion_Layer, self).__init__(shape,std,v)
+        super(FusionLayer, self).__init__(shape,std,v)
 
     def feed_forward(self, mid_features, global_features, stride):
         mid_features_shape = mid_features.get_shape().as_list()
         mid_features_reshaped = tf.reshape(mid_features,
                                            [conf.BATCH_SIZE, mid_features_shape[1] * mid_features_shape[2], 256])
         fusion_level = []
-        for j in range(mid_features_reshaped.shape[0]):
-            for i in range(mid_features_reshaped.shape[1]):
+        for j in range(mid_features_reshaped.get_shape()[0]):
+            for i in range(mid_features_reshaped.get_shape()[1]):
                 see_mid = mid_features_reshaped[j, i, :]
                 see_mid_shape = see_mid.get_shape().as_list()
                 see_mid = tf.reshape(see_mid, [1, see_mid_shape[0]])
@@ -43,7 +43,7 @@ class FusionLayer(Layer):
                 fusion_level.append(fusion)
         fusion_level = tf.stack(fusion_level, 1)
         fusion_level = tf.reshape(fusion_level, [conf.BATCH_SIZE, 28, 28, 512])
-        return super(Fusion_Layer, self).feed_forward(fusion_level, stride)
+        return super(FusionLayer, self).feed_forward(fusion_level, stride)
 
 class OutLayer(Layer):
     def __init__(self, shape, std, v):

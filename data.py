@@ -3,34 +3,27 @@ import cv2
 import os
 import conf
 
-""" returns batch, labels, and filelist """
-
-class DATA():
-
-
+class DATA:
 
 	def __init__(self, dir_name):
 		self.dir_path = os.path.join(conf.DATA_DIR, dir_name)
 		self.filelist = os.listdir(self.dir_path)
 		self.batch_size = conf.BATCH_SIZE
 		self.size = len(self.filelist)
-		self.useFullDataSize = true
-		#self.dataSampleSize = #conf.SAMPLE_SIZE #to test data on smaller size if we'd like 
+		self.useFullDataSize = True
+		# self.dataSampleSize = #conf.SAMPLE_SIZE #to test data on smaller size if we'd like
 		self.data_index = 0
 
-
 	# returns greyscale image and color image
-	#
-	#
 	def read_img(self, filename):
-		#loads img as is with alpha channels
+		# loads img as is with alpha channels
 		img = cv2.imread(filename, 3)
 		height, width, channels = img.shape
 
-		#resize image: input of the low-level features network to be of fixed size of 224 × 224
+		# resize image: input of the low-level features network to be of fixed size of 224 × 224
 		img_resized = cv2.resize(img, (conf.IMAGE_SIZE, conf. IMAGE_SIZE))
 
-		#convert img from RGB to LAB colorspace
+		# convert img from RGB to LAB colorspace
 		lab_img = cv2.cvtColor( img_resized, cv2.COLOR_BGR2Lab)
 
 		grey_img = np.reshape(lab_img[:,:,0], (conf.IMAGE_SIZE, conf.IMAGE_SIZE,1))
