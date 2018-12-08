@@ -1,0 +1,6 @@
+Train
+Source link: https://www.floydhub.com/emilwallner/datasets/colornet/2/images/Train
+
+Test: https://www.floydhub.com/emilwallner/datasets/colornet/2/images/Test
+
+Miscellaneous data set
