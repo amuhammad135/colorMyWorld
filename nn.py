@@ -6,26 +6,29 @@ class Layer:
         self.w = tf.Variable(tf.truncated_normal(shape=shape, stddev=std))
         self.b = tf.Variable(tf.constant(value=v, shape=[shape[-1]]))
 
+
 class ConvolutionLayer(Layer):
     def __init__(self, shape, std, v):
-        super(Convolution_Layer, self).__init__(shape,std, v)
+        super(ConvolutionLayer, self).__init__(shape, std, v)
 
     def feed_forward(self, x, stride):
         wx = tf.nn.conv2d(x, self.w, stride, padding="SAME")
         return tf.nn.tanh(tf.nn.bias_add(wx, self.b))
 
+
 class FCLayer(Layer):
     def __init__(self, shape, std, v):
-        super(FC_Layer, self).__init__(shape, std, v)
+        super(FCLayer, self).__init__(shape, std, v)
 
     # relu(W*x + b)
     def feed_forward(self, x):
         wx = tf.matmul(x, self.w)
-        return tf.nn.relu(tf.nn.bias_add(wx, self.b)
+        return tf.nn.relu(tf.nn.bias_add(wx, self.b))
 
-class FusionLayer(Layer):
+
+class FusionLayer(ConvolutionLayer):
     def __init__(self, shape, std, v):
-        super(FusionLayer, self).__init__(shape,std,v)
+        super(FusionLayer, self).__init__(shape, std, v)
 
     def feed_forward(self, mid_features, global_features, stride):
         mid_features_shape = mid_features.get_shape().as_list()
@@ -45,9 +48,10 @@ class FusionLayer(Layer):
         fusion_level = tf.reshape(fusion_level, [conf.BATCH_SIZE, 28, 28, 512])
         return super(FusionLayer, self).feed_forward(fusion_level, stride)
 
+
 class OutLayer(Layer):
     def __init__(self, shape, std, v):
-        super(Out_Layer, self).__init__(shape,std,v)
+        super(OutLayer, self).__init__(shape,std,v)
 
     def feed_forward(self, x, stride):
         wx = tf.nn.conv2d(x, self.w, stride, padding='SAME')

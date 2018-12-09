@@ -1,24 +1,17 @@
 import os
 
-# DIRECTORY INFORMATION
-DATASET = "Dogs"
-ROOT_DIR = os.path.abspath('../')
-DATA_DIR = os.path.join(ROOT_DIR, 'DATASET/'+DATASET+'/')
-OUT_DIR = os.path.join(ROOT_DIR, 'RESULT/'+DATASET+'/')
-MODEL_DIR = os.path.join(ROOT_DIR, 'MODEL/')
-LOG_DIR = os.path.join(ROOT_DIR, 'LOGS/'+DATASET+'/')
-
-TRAIN_DIR = "train"
-TEST_DIR = "test"
-
 # DATA INFORMATION
 IMAGE_SIZE = 224
 BATCH_SIZE = 1
+
+ROOT_DIR = os.path.abspath('./')
+MODEL_DIR = os.path.join(ROOT_DIR, 'MODEL/')
+OUT_DIR = os.path.join(ROOT_DIR, 'Resultl/' + 'Misc' + '/')
 
 # RANDOM NUMBER GENERATOR INFORMATION
 SEED = 128
 
 # TRAINING INFORMATION
-USE_PRETRAINED = False
-PRETRAINED = "Dogsmodel1_100"
-NUM_EPOCHS = 100
+USE_PRETRAINED = True
+PRETRAINED = "model1_10.ckpt"
+NUM_EPOCHS = 10

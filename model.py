@@ -1,9 +1,10 @@
 import os
 import tensorflow as tf
 import nn
-import numpy as np
 import conf
+import numpy as np
 import cv2
+
 
 def low_level_feature_network(x):
     conv1 = nn.ConvolutionLayer(shape=[3, 3, 1, 64], std=.1, v=.1)
@@ -65,10 +66,11 @@ def global_level_feature_network(x):
 
     return out
 
+
 def colorization_network(out_mid, out_global):
     # fusion -> conv
-    fusion_layer = nn.FusionLayer(shape=[1, 1 , 512, 256], std=.1, v=.1)
-    out = fusion_layer.feed_forward(out_mid,out_global,stride=[1, 1, 1, 1])
+    fusion_layer = nn.FusionLayer(shape=[1, 1, 512, 256], std=.1, v=.1)
+    out = fusion_layer.feed_forward(out_mid, out_global, stride=[1, 1, 1, 1])
 
     conv1 = nn.ConvolutionLayer(shape=[3, 3, 256, 128], std=.1, v=.1)
     out = conv1.feed_forward(x=out, stride=[1, 1, 1, 1])
@@ -96,16 +98,31 @@ def colorization_network(out_mid, out_global):
     return output
 
 
+def deprocess(imgs):
+    imgs = imgs * 255
+    imgs[imgs > 255] = 255
+    imgs[imgs < 0] = 0
+    return imgs.astype(np.uint8)
+
+
+def reconstruct(batchX, predictedY, filelist):
+    for i in range(conf.BATCH_SIZE):
+        result = np.concatenate((batchX[i], predictedY[i]), axis=2)
+        result = cv2.cvtColor(result, cv2.COLOR_Lab2BGR)
+        save_path = os.path.join(conf.OUT_DIR, filelist[i][:-4] + "reconstructed.jpg")
+        print(save_path)
+        cv2.imwrite(save_path, result)
+
 
 class Model():
     def __init__(self):
-        self.input = tf.placeholder(shape=[conf.BATCH_SIZE, conf.IMAGE_SIZE, conf.IMAGE_SIZE, 1], dtype=tf.float32)
+        self.inputs = tf.placeholder(shape=[conf.BATCH_SIZE, conf.IMAGE_SIZE, conf.IMAGE_SIZE, 1], dtype=tf.float32)
         self.labels = tf.placeholder(shape=[conf.BATCH_SIZE, conf.IMAGE_SIZE, conf.IMAGE_SIZE, 2], dtype=tf.float32)
         self.loss = None
         self.output = None
 
     def construct(self):
-        out_low = low_level_feature_network(self.input)
+        out_low = low_level_feature_network(self.inputs)
         out_mid = mid_level_feature_network(out_low)
         out_global = global_level_feature_network(out_low)
         self.output = colorization_network(out_mid,out_global)
@@ -125,32 +142,31 @@ class Model():
             for epoch in range(conf.NUM_EPOCHS):
                 avg_cost = 0
                 for batch in range(int(data.size/conf.BATCH_SIZE)):
-                    batchX, batchY, _ = data.get_batch()
-                    feed_dict = {self.inputs: batchX, self.labels: batchY}
+                    batch_x, batch_y, _ = data.get_batch()
+                    feed_dict = {self.inputs: batch_x, self.labels: batch_y}
                     _, loss_val = session.run([optimizer, self.loss], feed_dict=feed_dict)
                     print("batch:", batch, " loss: ", loss_val)
                     avg_cost += loss_val / int(data.size/conf.BATCH_SIZE)
                 print("Epoch:", (epoch + 1), "cost =", "{:.5f}".format(avg_cost))
 
-            save_path = saver.save(session, os.path.join(conf.MODEL_DIR, "model" + str(conf.BATCH_SIZE) + "_" + str(conf.NUM_EPOCHS) + ".ckpt"))
+            save_path = saver.save(session, os.path.join(conf.MODEL_DIR, "model" + str(conf.BATCH_SIZE) + "_" +
+                                                         str(conf.NUM_EPOCHS) + ".ckpt"))
+            print("save_path: ", save_path)
             print("Model saved in path: %s" % save_path)
 
-    def test(self, data, log):
+    def test(self, data, output_path):
         saver = tf.train.Saver()
         with tf.Session() as session:
-            saver.restore(session, os.path.join(conf.MODEL_DIR, "model" + str(conf.BATCH_SIZE) + "_" + str(conf.NUM_EPOCHS) + ".ckpt"))
+            saver.restore(session, os.path.join(conf.MODEL_DIR, "model" + str(conf.BATCH_SIZE) + "_" +
+                                                str(conf.NUM_EPOCHS) + ".ckpt"))
             avg_cost = 0
-            total_batch = int(data.size/conf.BATCH_SIZE)
-            for _ in range(total_batch):
-                batchX, batchY, filelist = data.get_batch()
-                feed_dict = {self.inputs: batchX, self.labels: batchY}
-                predY, loss = session.run([self.output, self.loss], feed_dict=feed_dict)
-                reconstruct(deprocess(batchX), deprocess(predY), filelist)
-                avg_cost += loss/total_batch
+            for _ in range(data.size):
+                batch_x, batch_y, images = data.get_batch()
+                feed_dict = {self.inputs: batch_x, self.labels: batch_y}
+                pred_y, loss = session.run([self.output, self.loss], feed_dict=feed_dict)
+                reconstruct(deprocess(batch_x), deprocess(pred_y), images)
+                avg_cost += loss/data.size
             print("cost =", "{:.3f}".format(avg_cost))
-            log.write("Average Cost: " + str(avg_cost) + "\n")
-
-
 
 
 
