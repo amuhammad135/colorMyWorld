@@ -42,7 +42,7 @@ class FusionLayer(ConvolutionLayer):
                 see_mid = tf.reshape(see_mid, [1, see_mid_shape[0]])
                 global_features_shape = global_features[j, :].get_shape().as_list()
                 see_global = tf.reshape(global_features[j, :], [1, global_features_shape[0]])
-                fusion = tf.concat([see_mid, see_global], 1)
+                fusion = tf.concat(1, [see_mid, see_global]) #was getting error, original line was: fusion = tf.concat([see_mid, see_global, 1])
                 fusion_level.append(fusion)
         fusion_level = tf.stack(fusion_level, 1)
         fusion_level = tf.reshape(fusion_level, [conf.BATCH_SIZE, 28, 28, 512])

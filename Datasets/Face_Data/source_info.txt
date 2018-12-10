@@ -1,2 +1,0 @@
-train: https://github.com/2014mchidamb/DeepColorization
-Color images of faces
